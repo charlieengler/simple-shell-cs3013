@@ -1,0 +1,19 @@
+Section 6 pipe streams
+hello
+zero
+zoo
+Arbitrarily deep pipes
+25
+The most common letters are
+  93996 s
+  91336 e
+  68961 i
+  66262 a
+  58883 n
+  58830 r
+  53699 t
+  50748 o
+  42014 l
+  31408 c
+Pipe stream return codes as predicates
+return code works properly

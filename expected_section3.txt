@@ -1,0 +1,16 @@
+Section 3
+Testing basic commands
+a
+b
+c
+/media/sf_VMShared/project1
+Testing variable substitution
+hello world
+empty b
+Testing return codes
+good1
+b is hello
+Testing for_loop
+x is a
+x is b
+x is c
