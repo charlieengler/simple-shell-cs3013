@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <linux/limits.h>
 
 #include "lsh_ast.h"
 
@@ -387,11 +388,16 @@ int run_fg_statement(struct context *context, const struct statement *statement,
 // Determines if the given command (string) is an intrinsic command (see sections 3 and 4)
 // Return 1 if the command is an intrinsic and 0 otherwise
 int is_builtin(const char *argv0) {
-	if (strcmp(argv0, "exit") == 0) return 1;
+	if (strcmp(argv0, "exit") == 0)
+		return 1;
+
 	// Your code goes here (Sections 4 & 5)
 
 	// Detects cd as an intrinsic command
 	if(strcmp(argv0, "cd") == 0)
+		return 1;
+
+	if(strcmp(argv0, "pwd") == 0)
 		return 1;
 
 	return 0;
@@ -405,9 +411,8 @@ int handle_builtin(struct context *context, char **argv, int argc) {
 	(void) context;	 // Line can likely be removed once implementation is done.
 	(void) argv;     // Line can likely be removed once implementation is done.
 	(void) argc;     // Line can likely be removed once implementation is done.
-	if (strcmp(argv[0], "exit") == 0) {
+	if (strcmp(argv[0], "exit") == 0)
 		exit(0);
-	}
 
 	// Your code goes here (Sections 4 & 5)
 
@@ -417,17 +422,53 @@ int handle_builtin(struct context *context, char **argv, int argc) {
 		// to another directory. Otherwise, assume we're moving into the HOME directory
 	 	if(argc > 1) {
 			// Execute the chdir syscall to change directories and check for an error
-			if(chdir(argv[1]) == -1)
+			if(chdir(argv[1]) == -1) {
 				printf("[lsh_ast.c -> handle_builtin()] chdir error: %d\n", errno);
+				return EINVAL;
+			}
 		} else {
 			// Execute the chdir syscall to change to the $HOME directory by getting the
 			// relevant environment variable and check for an error
-			if(chdir(getenv("HOME")) == -1)
+			char *home_path = getenv("HOME");
+			if(home_path == NULL) {
+				printf("[lsh_ast.c -> handle_builtin()] cd getenv error\n");
+				return EINVAL;
+			}
+
+			if(chdir(getenv("HOME")) == -1) {
 				printf("[lsh_ast.c -> handle_builtin()] chdir error: %d\n", errno);
+				return EINVAL;
+			}
+		}
+
+		// Code adapted from Mic on StackOverflow to get current working directory
+		char cwd[PATH_MAX+1];
+		if(getcwd(cwd, sizeof(cwd)) == NULL) {
+			printf("[lsh_ast.c -> handle_builtin()] getcwd error\n");
+			return EINVAL;
+		}
+
+		// Set the $PWD environment variable to the current working directory and check
+		// for an error
+		if(setenv("PWD", cwd, 1) == -1) {
+			printf("[lsh_ast.c -> handle_builtin()] setenv error: %d\n", errno);
+			return EINVAL;
 		}
 	}
 
+	// Check to see if the first argument is the pwd command
+	if(strcmp(argv[0], "pwd") == 0) {
+		// Retrieve the working directory path from the $PWD environment variable and check
+		// for an error
+		char *wd_path = getenv("PWD");
+		if(wd_path == NULL) {
+			printf("[lsh_ast.c -> handle_builtin()] pwd getenv error\n");
+			return EINVAL;
+		}
 
+		// Print the working directory
+		printf("%s\n", wd_path);
+	}
 
 	return EINVAL;
 }

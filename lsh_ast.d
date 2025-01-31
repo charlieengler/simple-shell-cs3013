@@ -81,5 +81,6 @@ lsh_ast.o: lsh_ast.c /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /usr/include/x86_64-linux-gnu/bits/signal_ext.h lsh_ast.h \
- /usr/include/string.h /usr/include/strings.h
+ /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
+ /usr/include/linux/limits.h lsh_ast.h /usr/include/string.h \
+ /usr/include/strings.h
