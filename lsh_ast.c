@@ -390,6 +390,10 @@ int is_builtin(const char *argv0) {
 	if (strcmp(argv0, "exit") == 0) return 1;
 	// Your code goes here (Sections 4 & 5)
 
+	// Detects cd as an intrinsic command
+	if(strcmp(argv0, "cd") == 0)
+		return 1;
+
 	return 0;
 }
 
@@ -406,6 +410,24 @@ int handle_builtin(struct context *context, char **argv, int argc) {
 	}
 
 	// Your code goes here (Sections 4 & 5)
+
+	// Check to see if the first argument is the cd command
+	if(strcmp(argv[0], "cd") == 0) {
+		// If there is more than one argument (cd + another string), then we're trying to navigate
+		// to another directory. Otherwise, assume we're moving into the HOME directory
+	 	if(argc > 1) {
+			// Execute the chdir syscall to change directories and check for an error
+			if(chdir(argv[1]) == -1)
+				printf("[lsh_ast.c -> handle_builtin()] chdir error: %d\n", errno);
+		} else {
+			// Execute the chdir syscall to change to the $HOME directory by getting the
+			// relevant environment variable and check for an error
+			if(chdir(getenv("HOME")) == -1)
+				printf("[lsh_ast.c -> handle_builtin()] chdir error: %d\n", errno);
+		}
+	}
+
+
 
 	return EINVAL;
 }
