@@ -541,8 +541,34 @@ out:
 // Run a command in the background (spawn as a child process but do not wait)
 // Note: need to keep track of all background child PIDs in case the user wants to call wait
 void run_bg_statement(struct context *context, const struct statement *statement, struct run_context *run_context) {
-	// Your code goes here (Section 5)
-		run_fg_statement(context, statement, run_context);
+
+	struct words *prog_words = context->script->first->program->words;
+	const char *command = prog_words->first->text;
+	const char **argv = (const char**)malloc(sizeof(char*));
+	int argc = 0;
+	struct word *current_word = prog_words->first->next;
+	while(current_word != NULL) {
+		*(argv + argc) = current_word->text;
+		current_word = current_word->next;
+		argc++;
+
+		const char **new_argv = (const char**)malloc((argc+1) * sizeof(char*));
+		memcpy(new_argv, argv, argc * sizeof(char*));
+		argv = new_argv;
+	}
+	
+	*(argv + argc) = (const char*)NULL;
+
+	// Fork the parent process and save the pid of the child
+	pid_t child_pid = fork();
+
+	// Execute the requested command from the
+	if(execvp(command, (char* const*)argv) == -1)
+		printf("[lsh_ast.c -> run_one_program()] execvp error: %d\n", errno);
+
+	context_pid_wait_tree_add(context, child_pid);
+
+	free(argv);
 }
 
 // Execute the pipe stream of commands, which is two commands chained together with a pipe (|)
