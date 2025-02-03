@@ -568,15 +568,22 @@ void run_bg_statement(struct context *context, const struct statement *statement
 	// Fork the parent process and save the pid of the child
 	pid_t child_pid = fork();
 
-	// Execute the requested command from the
-	if(execvp(command, (char* const*)argv) == -1)
-		printf("[lsh_ast.c -> run_one_program()] execvp error: %d\n", errno);
+	if(child_pid == -1) {
+		// If the fork returns -1, then there was an error forking the process
+		printf("[lsh_ast.c -> run_bg_statement()] fork error: %d\n", errno);
+	} else if(child_pid > 0) {
+		// The parent process shouldn't wait on the child, instead it simply adds the child pid
+		// to the pid wait tree for later processing.
+		context_pid_wait_tree_add(context, child_pid);
+	} else {
+		// Execute the requested command from the program structure and pass in the arguments
+		// from the generated argv buffer. This is run on the child process.
+		if(execvp(command, (char* const*)argv) == -1)
+			printf("[lsh_ast.c -> run_one_program()] execvp error: %d\n", errno);
+	}
 
-	context_pid_wait_tree_add(context, child_pid);
-
-	
-	waitpid(child_pid, NULL, WNOHANG);
-
+	// I'm not sure if this free even gets run on the child process, hopefully the data is
+	// cleaned up when the child process exits lol
 	free(argv);
 }
 

@@ -1,3 +1,7 @@
 Section 5 background processes
 5 background processes
 5 background processes
+5 background processes
+waited
+[lsh_ast.c -> run_one_program()] execvp error: 2
+waited
