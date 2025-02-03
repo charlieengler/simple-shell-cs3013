@@ -1,0 +1,14 @@
+Testing &&
+Testing ||
+Testing combinations of && and ||
+Testing return codes
+bad
+bad
+bad
+good
+good
+good
+bad
+good
+bad
+bad
