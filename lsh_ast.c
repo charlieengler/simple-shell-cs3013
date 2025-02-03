@@ -397,8 +397,8 @@ int is_builtin(const char *argv0) {
 	if(strcmp(argv0, "cd") == 0)
 		return 1;
 
-	if(strcmp(argv0, "pwd") == 0)
-		return 1;
+	// if(strcmp(argv0, "pwd") == 0)
+	// 	return 1;
 
 	return 0;
 }
