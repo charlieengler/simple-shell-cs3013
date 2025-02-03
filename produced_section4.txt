@@ -6,3 +6,11 @@ Section 4 cd intrinsic
 /usr/bin
 /usr
 /home/student
+echo
+pwd
+pwd
+pwd
+pwd
+pwd
+pwd
+pwd

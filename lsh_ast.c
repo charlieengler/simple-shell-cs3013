@@ -382,6 +382,12 @@ int run_fg_statement(struct context *context, const struct statement *statement,
 		tdelete((void *)(uintptr_t)pid, &context->pid_wait_tree, pid_wait_tree_compare);
 		// Here we want to wait on the child process with process id 'pid'.
 		// Your code goes here (Section 5)
+
+		// Wait for the child process, identified by the pid from the pid tree, to terminate, and
+		// pass its wstatus argument to a null pointer. No flags are used in this function call as
+		// indicated by the third argument being zero
+		if(waitpid(pid, NULL, 0) != pid)
+			printf("[lsh_ast.c -> run_one_program()] waitpid error: %d\n", errno);
 	}
 }
 
@@ -396,6 +402,12 @@ int is_builtin(const char *argv0) {
 	// Detects cd as an intrinsic command
 	if(strcmp(argv0, "cd") == 0)
 		return 1;
+
+	// Detects wait as an intrinsic command
+	if(strcmp(argv0, "wait") == 0)
+		return 1;
+
+	printf("%s\n", argv0);
 
 	// if(strcmp(argv0, "pwd") == 0)
 	// 	return 1;
@@ -454,6 +466,11 @@ int handle_builtin(struct context *context, char **argv, int argc) {
 			printf("[lsh_ast.c -> handle_builtin()] setenv error: %d\n", errno);
 			return EINVAL;
 		}
+	}
+
+	// Check to see if the first argument is the wait command
+	if(strcmp(argv[0], "wait") == 0) {
+		context_empty_pid_wait_tree(context);
 	}
 
 	// Check to see if the first argument is the pwd command
@@ -546,24 +563,8 @@ out:
 // Run a command in the background (spawn as a child process but do not wait)
 // Note: need to keep track of all background child PIDs in case the user wants to call wait
 void run_bg_statement(struct context *context, const struct statement *statement, struct run_context *run_context) {
-	struct words *prog_words = context->script->first->program->words;
-	const char *command = prog_words->first->text;
-	const char **argv = (const char**)malloc(sizeof(char*));
-	int argc = 0;
-	struct word *current_word = prog_words->first->next;
-	while(current_word != NULL) {
-		*(argv + argc) = current_word->text;
-		current_word = current_word->next;
-		argc++;
-
-		const char **new_argv = (const char**)malloc((argc+1) * sizeof(char*));
-		memcpy(new_argv, argv, argc * sizeof(char*));
-		argv = new_argv;
-	}
-	
-	*(argv + argc) = (const char*)NULL;
-	if(argc == 0)
-		argv = NULL;
+	// Create the argv buffer using built in functions
+	struct argv_buf *argv = make_argv(context, statement->program->words);
 
 	// Fork the parent process and save the pid of the child
 	pid_t child_pid = fork();
@@ -578,13 +579,12 @@ void run_bg_statement(struct context *context, const struct statement *statement
 	} else {
 		// Execute the requested command from the program structure and pass in the arguments
 		// from the generated argv buffer. This is run on the child process.
-		if(execvp(command, (char* const*)argv) == -1)
+		if(execvp(statement->program->words->first->text, argv->argv) == -1)
 			printf("[lsh_ast.c -> run_one_program()] execvp error: %d\n", errno);
 	}
 
-	// I'm not sure if this free even gets run on the child process, hopefully the data is
-	// cleaned up when the child process exits lol
-	free(argv);
+	// Make sure the argv buffer is freed afterwords (hopefully lol)
+	free_argv(argv);
 }
 
 // Execute the pipe stream of commands, which is two commands chained together with a pipe (|)

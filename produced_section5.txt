@@ -1,7 +1,13 @@
 Section 5 background processes
-5 background processes
-5 background processes
-5 background processes
+hello
+sleep
+echo
+world
+sleep
+echo
+its a shell
+sleep
+echo
 waited
-[lsh_ast.c -> run_one_program()] execvp error: 2
-waited
+echo
+echo

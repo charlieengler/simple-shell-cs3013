@@ -3,3 +3,8 @@ Arbitrarily deep pipes
 The most common letters are
 Pipe stream return codes as predicates
 this is broken
+echo
+echo
+echo
+echo
+echo
