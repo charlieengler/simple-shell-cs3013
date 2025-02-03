@@ -1,11 +1,5 @@
 Section 5 background processes
 hello
-sleep
-echo
 world
-sleep
-echo
 its a shell
-sleep
-echo
 waited

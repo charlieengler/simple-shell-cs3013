@@ -407,8 +407,6 @@ int is_builtin(const char *argv0) {
 	if(strcmp(argv0, "wait") == 0)
 		return 1;
 
-	printf("%s\n", argv0);
-
 	// if(strcmp(argv0, "pwd") == 0)
 	// 	return 1;
 
@@ -606,6 +604,12 @@ int run_and_programs(struct context *context, const struct program *program, str
 	int rc = -ENOSYS;
 
 	// Your code goes here (Section 6)
+	// Run the program on the left hand side of the &&
+	rc = run_program(context, program->lhs, run_context);
+	
+	// If the left hand side program ran successfully (return code 0), then run the right hand side of the &&
+	if(rc == 0)
+		rc = run_program(context, program->rhs, run_context);
 
 	return rc;
 }
@@ -615,6 +619,12 @@ int run_or_programs(struct context *context, const struct program *program, stru
 	int rc = -ENOSYS;
 
 	// Your code goes here (Section 6)
+	// Run the program on the left hand side of the ||
+	rc = run_program(context, program->lhs, run_context);
+	
+	// If the left hand side program failed (return code other than 0), then run the right hand side of the ||
+	if(rc != 0)
+		rc = run_program(context, program->rhs, run_context);
 
 	return rc;
 }

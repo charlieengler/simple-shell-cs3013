@@ -14,21 +14,3 @@ Testing for_loop
 x is a
 x is b
 x is c
-echo
-echo
-echo
-echo
-echo
-pwd
-echo
-echo
-echo
-echo
-false
-true
-echo
-echo
-echo
-echo
-echo
-echo

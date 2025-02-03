@@ -1,28 +1,21 @@
 Testing &&
+hello
+world
 Testing ||
+hello
+world
+good
 Testing combinations of && and ||
+hello
+world
 Testing return codes
-bad
-bad
-bad
 good
 good
 good
-bad
 good
-bad
-bad
-echo
-echo
-echo
-echo
-echo
-echo
-echo
-echo
-echo
-echo
-echo
-echo
-echo
-echo
+good
+good
+good
+good
+good
+good
