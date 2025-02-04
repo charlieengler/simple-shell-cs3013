@@ -1,0 +1,17 @@
+countargs
+countargs.d
+countargs.o
+
+expected_section*.txt
+produced_section*.txt
+
+lsh
+lsh.d
+lsh.o
+
+lsh_ast.d
+lsh_ast.o
+
+lsh.lex.*
+
+lsh.yacc.*
