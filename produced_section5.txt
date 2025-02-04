@@ -1,5 +1,0 @@
-Section 5 background processes
-hello
-world
-its a shell
-waited

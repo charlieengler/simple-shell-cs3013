@@ -1,8 +1,0 @@
-Section 4 cd intrinsic
-/media/sf_VMShared/project1
-/tmp
-/
-/usr
-/usr/bin
-/usr
-/home/student
