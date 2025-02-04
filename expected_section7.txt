@@ -1,4 +1,4 @@
-Section 6 pipe streams
+Section 7 pipe streams
 hello
 zero
 zoo
