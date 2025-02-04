@@ -517,10 +517,12 @@ int run_one_program(struct context *context, const struct program *program, stru
 		if(waitpid(child_pid, &rc, 0) != child_pid)
 			printf("[lsh_ast.c -> run_one_program()] waitpid error: %d\n", errno);
 	} else { // Child process
-		// TODO: Error checking
+		// Override the standard input file descriptor with the input file descriptor passed 
+		// through run context. This ends up being a pipe file descriptor, or normal standard in.
 		dup2(run_context->stdin_fd, STDIN_FILENO);
 
-		// TODO: Error checking
+		// Override the standard output file descriptor with the output file descriptor passed 
+		// through run context. This ends up being a pipe file descriptor, or normal standard out.
 		dup2(run_context->stdout_fd, STDOUT_FILENO);
 
 		// Execute the requested command from the program structure *program and pass in the arguments
@@ -601,9 +603,12 @@ int run_pipe_programs(struct context *context, const struct program *program, st
 
 	// Your code goes here (Section 7)
 
-	// TODO: Error checking
+	// Create a pipe and check for an error
 	int pipefd[2];
-	pipe(pipefd);
+	if(pipe(pipefd) != 0) {
+		printf("[lsh_ast.c -> run_pipe_programs()] pipe error %d\n", errno);
+		return rc;
+	}
 
 	// Fork the parent process and store the pid of the child
 	pid_t child_pid = fork();
@@ -613,35 +618,48 @@ int run_pipe_programs(struct context *context, const struct program *program, st
 		printf("[lsh_ast.c -> run_pipe_programs()] fork error: %d\n", errno);
 
 		// Clean up before returning
-		// TODO: Error checking
-		close(pipefd[0]);
-		close(pipefd[1]);
-	} else if(child_pid > 0) { // Parent process
-		// TODO: Error checking
-		close(pipefd[1]);
+		if(close(pipefd[0]) != 0)
+			printf("[lsh_ast.c -> run_pipe_programs()] failed fork close pipefd[0] error: %d\n", errno);
 
-		// TODO: Explanation
+		if(close(pipefd[1]) != 0)
+			printf("[lsh_ast.c -> run_pipe_programs()] failed fork close pipefd[1] error: %d\n", errno);
+	} else if(child_pid > 0) { // Parent process
+	 	// The parent won't need to write to the pipe, so it's closed
+		if(close(pipefd[1]) != 0)
+			printf("[lsh_ast.c -> run_pipe_programs()] parent process close pipefd[1] error: %d\n", errno);
+
+		// The input file descriptor of the parent process is redicted to the input of the pipe fulfilled by
+		// the child process.
 		run_context->stdin_fd = pipefd[0];
 
-		// TODO: Error checking and rc might not work
+		// We do not wait for the child program as it may stdout more than 64KB, which will most likely lead
+		// to its program hanging indefinitely. This will cause wait to hang indefinitely as the child will
+		// still technically be executing. Therefore, the parent will not consume any of the data leaving both
+		// processes hanging and the program in deadlock.
+
+		// If the programs are nested, then call run_pipe_programs() to process all pipes, otherwise just call
+		// run_program() to process the right side of the pipe expression
 		if(program->rhs->rhs != NULL)
 			rc = run_pipe_programs(context, program->rhs, run_context);
 		else
 			rc = run_program(context, program->rhs, run_context);
 	} else { // Child process
-	 	// TODO: Error checking
-		close(pipefd[0]);
+	 	// The child won't need to read from the pipe, so it's closed
+		if(close(pipefd[0]) != 0)
+			printf("[lsh_ast.c -> run_pipe_programs()] child process close pipefd[0] error: %d\n", errno);
 		
-		// TODO: Explanation
+		// The output file descriptor of the child process is redicted to the output of the pipe consumed by
+		// the parent process.
 		run_context->stdout_fd = pipefd[1];
 
-		// TODO: Error checking and rc might not work
+		// Run the program on the left hand side on the child process so its result may be consumed by the parent process
 		rc = run_program(context, program->lhs, run_context);
 
-		// TODO: Error checking
-		close(pipefd[1]);
+		// The output of the pipe is no longer needed, so it's closed
+		if(close(pipefd[1]) != 0)
+			printf("[lsh_ast.c -> run_pipe_programs()] child process close pipefd[1] error: %d\n", errno);
 
-		// TODO: Explanation
+		// The child process needs to exit once complete, otherwise processes will execute out of order
 		exit(rc);
 	}
 
